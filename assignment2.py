@@ -34,8 +34,8 @@ def parse_command_args() -> argparse.Namespace:
 
 def percent_to_graph(percent: float, length: int = 20) -> str:
     "Convert percentage to a visual bar of specified length."
-    bar_length = int(length * (percent / 100))
-    bar = '#' * bar_length + ' ' * (length - bar_length)
+    bar_length = int(length * (percent / 100)) #Calculate how much of the bar should be filled based on percentage
+    bar = '#' * bar_length + ' ' * (length - bar_length) # Create the bar
     return '[' + bar[:length-2] + ']'
 
 def get_sys_mem() -> int:
@@ -44,7 +44,7 @@ def get_sys_mem() -> int:
     with open('/proc/meminfo', 'r') as f:
         for line in f:
             if line.startswith('MemTotal:'):
-                mem_total = int(line.split()[1])
+                mem_total = int(line.split()[1]) # Find the total system memory value
                 break
     return mem_total
 
@@ -54,7 +54,7 @@ def get_avail_mem() -> int:
     with open('/proc/meminfo', 'r') as f:
         for line in f:
             if line.startswith('MemAvailable:'):
-                mem_avail = int(line.split()[1])
+                mem_avail = int(line.split()[1]) # Find the available memory
                 break
     return mem_avail  
 
@@ -74,14 +74,14 @@ def pids_of_prog(app_name: str) -> list:
 def rss_mem_of_pid(proc_id: str) -> int:
     "Returns RSS memory usage of a process in KiB (kibibytes) given its PID."
     rss_mem = 0
-    path = f'/proc/{proc_id}/smaps'
+    path = f'/proc/{proc_id}/smaps' # Path to the smaps file, which contains memory usage info
     
     try:
         with open(path, 'r') as f:
             for line in f:
-                if line.startswith('Rss:'):
+                if line.startswith('Rss:'): # Look for lines starting with 'Rss' refering to memory usage
                     # Extract the Rss value (in KiB)
-                    rss_mem += int(line.split()[1])
+                    rss_mem += int(line.split()[1]) # Add Rss value to the total
     except FileNotFoundError:
         print(f"Error: The file '/proc/{proc_id}/smaps' does not exist.")
     
@@ -89,7 +89,7 @@ def rss_mem_of_pid(proc_id: str) -> int:
 
 def bytes_to_human_r(kibibytes: int, decimal_places: int=2) -> str:
     "Converts memory size from KiB to human-readable format."
-    suffixes = ['KiB', 'MiB', 'GiB', 'TiB', 'PiB']
+    suffixes = ['KiB', 'MiB', 'GiB', 'TiB', 'PiB'] # suffixes for memory unit types
     count = 0
     result = kibibytes
     # Convert to higher units (KiB to MiB, GiB, etc.) until less than 1024
@@ -114,8 +114,8 @@ if __name__ == "__main__":
 
         # Convert values to human-readable format
         if args.human_readable:
-            total_memory_h = bytes_to_human_r(total_memory)
-            used_memory_h = bytes_to_human_r(used_memory)
+            total_memory_h = bytes_to_human_r(total_memory) # convert total memory to human-readable format
+            used_memory_h = bytes_to_human_r(used_memory) # convert used memory to human-readable format
             print(f"Total Memory: {total_memory_h}")
             print(f"Used Memory: {used_memory_h}")
         else:
@@ -123,15 +123,15 @@ if __name__ == "__main__":
             print(f"Used Memory: {used_memory} KiB")
 
         # Display bar graph for used memory percentage
-        used_percent = (used_memory / total_memory) * 100
+        used_percent = (used_memory / total_memory) * 100 #calculate the percentage of used memory
         print("Memory Usage:")
-        print(percent_to_graph(used_percent, args.length))
+        print(percent_to_graph(used_percent, args.length)) # display the bar graph
     else:
         # Program specified
-        pids = pids_of_prog(args.program)
+        pids = pids_of_prog(args.program) # get the PIDs associated with the specified program
        
         if not pids:
-            print(f"No processes found for the program '{args.program}'.")
+            print(f"No processes found for the program '{args.program}'.") # if no process found, notify the user
         else:
             total_rss = 0
             for pid in pids:
@@ -145,6 +145,6 @@ if __name__ == "__main__":
                 print(f"Total RSS Memory Used by {args.program}: {total_rss} KiB")
 
             # Display bar graph for RSS memory percentage relative to system memory
-            rss_percent = (total_rss / get_sys_mem()) * 100
+            rss_percent = (total_rss / get_sys_mem()) * 100 # calculate the percentage of RSS memory
             print("RSS Memory Usage:")
-            print(percent_to_graph(rss_percent, args.length))
+            print(percent_to_graph(rss_percent, args.length)) # display the bar graph for RSS memory usage
